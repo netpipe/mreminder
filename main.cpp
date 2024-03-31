@@ -145,7 +145,7 @@ private:
     QCalendarWidget *calendar;
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
-    QTime reminderTime = QTime(12, 0); // Set the default reminder time to 12:00 PM
+    QTime reminderTime = QTime(6, 0); // Set the default reminder time to 12:00 PM
     bool reminderShown = false;
 };
 
