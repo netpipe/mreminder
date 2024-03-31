@@ -18,6 +18,16 @@ public:
         timer->start(1000); // Check every second for time-based events
     }
 
+protected:
+    void closeEvent(QCloseEvent *event) override {
+        if (trayIcon->isVisible()) {
+            hide();
+            event->ignore();
+        } else {
+            event->accept();
+        }
+    }
+
 private slots:
     void showReminder() {
         QMessageBox::StandardButton reply;
@@ -135,7 +145,7 @@ private:
     QCalendarWidget *calendar;
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
-    QTime reminderTime = QTime(6, 0); // Set the default reminder time to 12:00 PM
+    QTime reminderTime = QTime(12, 0); // Set the default reminder time to 12:00 PM
     bool reminderShown = false;
 };
 
