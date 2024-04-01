@@ -10,12 +10,13 @@ public:
         createUI();
         createConnection();
         createTable();
+        loadReminderTime(); // Load reminder time from SQL database
         updateCalendar();
 
         // Set up timer for daily reminder
         QTimer *timer = new QTimer(this);
         connect(timer, &QTimer::timeout, this, &MedicationReminder::dailyReminder);
-        timer->start(1000); // Check every second for time-based events
+        timer->start(60000); // Check every minute for time-based events
     }
 
 protected:
@@ -58,14 +59,21 @@ private slots:
     }
 
     void dailyReminder() {
-        // Check if it's time for the daily reminder
+        // Get the current system time
         QTime currentTime = QTime::currentTime();
-        if (currentTime.hour() == reminderTime.hour() && currentTime.minute() == reminderTime.minute() && !reminderShown) {
+
+        // Check if the current hour matches the reminder hour
+        if (currentTime.hour() == reminderTime.hour() && !reminderShown) {
             reminderShown = true;
             showReminder();
         } else {
             reminderShown = false;
         }
+    }
+
+    void updateReminderTime() {
+        reminderTime = reminderTimeEdit->time();
+        saveReminderTime(); // Save reminder time to SQL database
     }
 
 private:
@@ -78,6 +86,13 @@ private:
         calendar = new QCalendarWidget(this);
         layout->addWidget(calendar);
 
+        reminderTimeEdit = new QDateTimeEdit(this);
+        reminderTimeEdit->setDisplayFormat("hh:mm AP");
+        layout->addWidget(reminderTimeEdit);
+
+        QPushButton *setReminderButton = new QPushButton("Set Reminder", this);
+        layout->addWidget(setReminderButton);
+
         QPushButton *reminderButton = new QPushButton("Take Medication", this);
         layout->addWidget(reminderButton);
 
@@ -85,6 +100,7 @@ private:
 
         connect(reminderButton, &QPushButton::clicked, this, &MedicationReminder::showReminder);
         connect(calendar, &QCalendarWidget::clicked, this, &MedicationReminder::dateClicked);
+        connect(setReminderButton, &QPushButton::clicked, this, &MedicationReminder::updateReminderTime);
 
         createSystemTrayIcon();
     }
@@ -104,7 +120,37 @@ private:
         query.exec("CREATE TABLE IF NOT EXISTS MedicationCalendar ("
                    "Date DATE PRIMARY KEY,"
                    "MedicationTaken BOOLEAN)");
+        query.exec("CREATE TABLE IF NOT EXISTS Settings ("
+                   "ReminderHour TEXT PRIMARY KEY)");
     }
+
+    void loadReminderTime() {
+        QSqlQuery query("SELECT ReminderHour FROM Settings ORDER BY rowid DESC LIMIT 1");
+        if (query.next()) {
+            QString reminderHour = query.value(0).toString();
+            qDebug() << "Reminder hour retrieved from database:" << reminderHour;
+            reminderTime = QTime::fromString(reminderHour, "hh:mm AP");
+            reminderTimeEdit->setTime(reminderTime);
+        } else {
+            qDebug() << "No reminder time found in the database.";
+        }
+    }
+
+    void saveReminderTime() {
+        QSqlQuery query;
+        query.prepare("INSERT OR REPLACE INTO Settings (ReminderHour) VALUES (:ReminderHour)");
+        query.bindValue(":ReminderHour", reminderTime.toString("hh:mm AP"));
+
+        qDebug() << "SQL Query:" << query.lastQuery();
+        qDebug() << "Bind Values:" << query.boundValues();
+
+        if (!query.exec()) {
+            qDebug() << "Error saving reminder time:" << query.lastError().text();
+        } else {
+            qDebug() << "Reminder time saved successfully.";
+        }
+    }
+
 
     void markMedicationTaken(const QDate &date) {
         QSqlQuery query;
@@ -145,7 +191,8 @@ private:
     QCalendarWidget *calendar;
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
-    QTime reminderTime = QTime(6, 0); // Set the default reminder time to 12:00 PM
+    QDateTimeEdit *reminderTimeEdit;
+    QTime reminderTime = QTime::currentTime(); // Default reminder time as current time
     bool reminderShown = false;
 };
 
