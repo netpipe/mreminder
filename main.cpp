@@ -15,7 +15,9 @@ public:
 
         // Set up timer for daily reminder
         QTimer *timer = new QTimer(this);
-        connect(timer, &QTimer::timeout, this, &MedicationReminder::dailyReminder);
+      //  connect(timer, &QTimer::timeout, this, &MedicationReminder::dailyReminder);
+        connect(timer, &QTimer::timeout, this, &MedicationReminder::checkForMidnight);
+
         timer->start(60000); // Check every minute for time-based events
     }
 
@@ -178,6 +180,17 @@ private:
         query.bindValue(":Date", date.toString(Qt::ISODate));
         query.bindValue(":MedicationTaken", true);
         query.exec();
+    }
+
+    void checkForMidnight() {
+        // Get the current system time
+        QTime currentTime = QTime::currentTime();
+
+        // Check if it's midnight
+        if (currentTime.hour() == 0 && currentTime.minute() == 0) {
+            updateCalendar();
+            dailyReminder(); // Call dailyReminder after midnight
+        }
     }
 
     void updateCalendar() {
