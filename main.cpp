@@ -207,7 +207,9 @@ private:
         QTextCharFormat format;
         format.setBackground(Qt::green); // Color for dates with medication taken
         for (const QDate &date : dates) {
-            calendar->setDateTextFormat(date, format);
+            if (isMedicationTaken(date)) {
+                calendar->setDateTextFormat(date, format);
+            }
         }
     }
 
