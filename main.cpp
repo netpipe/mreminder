@@ -15,7 +15,7 @@ public:
 
         // Set up timer for daily reminder
         QTimer *timer = new QTimer(this);
-      //  connect(timer, &QTimer::timeout, this, &MedicationReminder::dailyReminder);
+        connect(timer, &QTimer::timeout, this, &MedicationReminder::dailyReminder);
       //  connect(timer, &QTimer::timeout, this, &MedicationReminder::checkForMidnight);
 
         timer->start(60000); // Check every minute for time-based events
