@@ -18,7 +18,7 @@ public:
         connect(timer, &QTimer::timeout, this, &MedicationReminder::dailyReminder);
       //  connect(timer, &QTimer::timeout, this, &MedicationReminder::checkForMidnight);
 
-        timer->start(60000); // Check every minute for time-based events
+        timer->start(40000); // 60000 Check every minute for time-based events
     }
 
 protected:
@@ -33,19 +33,32 @@ protected:
 
 private slots:
     void showReminder() {
-        QMessageBox::StandardButton reply;
-
+        QMessageBox msgBox;
+qApp->setQuitOnLastWindowClosed(false);
         if (isMedicationTaken(QDate::currentDate())) {
             qDebug() << "Medication already taken for today. Skipping reminder.";
-            return;
-        }
+            //return;
+        }else{
+        msgBox.setWindowTitle("Medication Reminder");
+        msgBox.setText("Did you take your medication?");
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.setDefaultButton(QMessageBox::Yes);
 
-        reply = QMessageBox::question(this, "Medication Reminder", "Did you take your medication?",
-                                      QMessageBox::Yes | QMessageBox::No);
+        // Ensure that the application does not close when minimized
+        //msgBox.setAttribute(Qt::WA_ShowMinimized, false);
 
-        if (reply == QMessageBox::Yes) {
+        // Show the message box and handle the user's response
+        int ret = msgBox.exec();
+        if (ret == QMessageBox::Yes) {
             markMedicationTaken(QDate::currentDate());
             updateCalendar();
+        } else if (ret == QMessageBox::No) {
+            // Do nothing or provide appropriate action to handle "No" response
+            qDebug() << "User clicked No on medication reminder.";
+        }
+
+        // Re-enable quitOnLastWindowClosed flag
+        qApp->setQuitOnLastWindowClosed(true);
         }
     }
 
