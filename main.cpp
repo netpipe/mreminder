@@ -32,8 +32,15 @@ protected:
 private slots:
     void showReminder() {
         QMessageBox::StandardButton reply;
+
+        if (isMedicationTaken(QDate::currentDate())) {
+            qDebug() << "Medication already taken for today. Skipping reminder.";
+            return;
+        }
+
         reply = QMessageBox::question(this, "Medication Reminder", "Did you take your medication?",
                                       QMessageBox::Yes | QMessageBox::No);
+
         if (reply == QMessageBox::Yes) {
             markMedicationTaken(QDate::currentDate());
             updateCalendar();
@@ -63,7 +70,10 @@ private slots:
         QTime currentTime = QTime::currentTime();
 
         // Check if the current hour matches the reminder hour
-        if (currentTime.hour() == reminderTime.hour() && !reminderShown) {
+        if (currentTime.hour() == reminderTime.hour() && currentTime.minute() == reminderTime.minute() &&
+            !reminderShown &&
+            !isMedicationTaken(QDate::currentDate())) {
+
             reminderShown = true;
             showReminder();
         } else {
@@ -150,7 +160,16 @@ private:
             qDebug() << "Reminder time saved successfully.";
         }
     }
-
+    bool isMedicationTaken(const QDate &date) {
+        QSqlQuery query;
+        query.prepare("SELECT MedicationTaken FROM MedicationCalendar WHERE Date = :Date");
+        query.bindValue(":Date", date.toString(Qt::ISODate));
+        query.exec();
+        if (query.next()) {
+            return query.value(0).toBool();
+        }
+        return false;
+    }
 
     void markMedicationTaken(const QDate &date) {
         QSqlQuery query;
