@@ -70,7 +70,7 @@ private slots:
     void dailyReminder() {
         // Get the current system time
         QTime currentTime = QTime::currentTime();
-
+qDebug)
         // Check if the current hour matches the reminder hour
         if (currentTime.hour() == reminderTime.hour() && currentTime.minute() == reminderTime.minute() &&
             !reminderShown &&
