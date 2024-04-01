@@ -218,7 +218,7 @@ private:
         trayIconMenu->addAction("Show Window", this, &MedicationReminder::showWindow);
         trayIconMenu->addAction("Quit", this, &MedicationReminder::quitApplication);
 
-        trayIcon = new QSystemTrayIcon(QIcon(":/icon.png"), this);
+        trayIcon = new QSystemTrayIcon(QIcon(":/mremind-icon.png"), this);
         trayIcon->setContextMenu(trayIconMenu);
         trayIcon->show();
     }
