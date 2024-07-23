@@ -108,8 +108,12 @@ private:
         setCentralWidget(centralWidget);
 
         QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+centralWidget->setStyleSheet("color:#000000;background-color:#c1c1c1");
 
         calendar = new QCalendarWidget(this);
+        calendar->setStyleSheet("color:#000000;background-color:#c1c1c1");
+        //calendar->setStyleSheet("color:#ffffff;background-color:#000000");
+
         layout->addWidget(calendar);
 
         reminderTimeEdit = new QDateTimeEdit(this);
@@ -248,7 +252,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
     MedicationReminder reminder;
-    reminder.show();
+    reminder.hide();
 
     return app.exec();
 }
