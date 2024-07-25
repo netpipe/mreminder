@@ -50,7 +50,7 @@ qApp->setQuitOnLastWindowClosed(false);
         // Show the message box and handle the user's response
         int ret = msgBox.exec();
         if (ret == QMessageBox::Yes) {
-            markMedicationTaken(QDate::currentDate());
+            markMedicationTaken(QDate::currentDate(),true);
             updateCalendar();
         } else if (ret == QMessageBox::No) {
             // Do nothing or provide appropriate action to handle "No" response
@@ -63,12 +63,18 @@ qApp->setQuitOnLastWindowClosed(false);
     }
 
     void dateClicked(const QDate &date) {
+        if (!isMedicationTaken(date)){
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(this, "Medication Reminder", "Would you like to take medication for this day?",
                                       QMessageBox::Yes | QMessageBox::No);
         if (reply == QMessageBox::Yes) {
-            markMedicationTaken(date);
+            markMedicationTaken(date,true);
             updateCalendar();
+        }
+       // if (reply == QMessageBox::No) {
+       //     markMedicationTaken(date,false);
+       //     updateCalendar();
+        //}
         }
     }
 
@@ -191,12 +197,12 @@ centralWidget->setStyleSheet("color:#000000;background-color:#c1c1c1");
         return false;
     }
 
-    void markMedicationTaken(const QDate &date) {
+    void markMedicationTaken(const QDate &date,bool value) {
         QSqlQuery query;
         query.prepare("INSERT OR REPLACE INTO MedicationCalendar (Date, MedicationTaken) "
                       "VALUES (:Date, :MedicationTaken)");
         query.bindValue(":Date", date.toString(Qt::ISODate));
-        query.bindValue(":MedicationTaken", true);
+        query.bindValue(":MedicationTaken", value);
         query.exec();
     }
 
