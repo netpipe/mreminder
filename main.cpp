@@ -63,7 +63,8 @@ qApp->setQuitOnLastWindowClosed(false);
     }
 
     void dateClicked(const QDate &date) {
-        if (!isMedicationTaken(date)){
+       // if (!isMedicationTaken(date)){
+        if (1){
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(this, "Medication Reminder", "Would you like to take medication for this day?",
                                       QMessageBox::Yes | QMessageBox::No);
@@ -71,10 +72,10 @@ qApp->setQuitOnLastWindowClosed(false);
             markMedicationTaken(date,true);
             updateCalendar();
         }
-       // if (reply == QMessageBox::No) {
-       //     markMedicationTaken(date,false);
-       //     updateCalendar();
-        //}
+        if (reply == QMessageBox::No) {
+            markMedicationTaken(date,3);
+            updateCalendar();
+        }
         }
     }
 
@@ -143,7 +144,7 @@ centralWidget->setStyleSheet("color:#000000;background-color:#c1c1c1");
 
     void createConnection() {
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-        db.setDatabaseName("medication.db");
+        db.setDatabaseName(QApplication::applicationDirPath() + "/medication.db");
 
         if (!db.open()) {
             qDebug() << "Error: Couldn't open database";
@@ -186,18 +187,21 @@ centralWidget->setStyleSheet("color:#000000;background-color:#c1c1c1");
             qDebug() << "Reminder time saved successfully.";
         }
     }
-    bool isMedicationTaken(const QDate &date) {
+
+    int isMedicationTaken(const QDate &date) {
         QSqlQuery query;
         query.prepare("SELECT MedicationTaken FROM MedicationCalendar WHERE Date = :Date");
         query.bindValue(":Date", date.toString(Qt::ISODate));
         query.exec();
         if (query.next()) {
-            return query.value(0).toBool();
+            qDebug() << query.value(0).toInt();
+            return query.value(0).toInt();
         }
+
         return false;
     }
 
-    void markMedicationTaken(const QDate &date,bool value) {
+    void markMedicationTaken(const QDate &date,int value) {
         QSqlQuery query;
         query.prepare("INSERT OR REPLACE INTO MedicationCalendar (Date, MedicationTaken) "
                       "VALUES (:Date, :MedicationTaken)");
@@ -218,6 +222,17 @@ centralWidget->setStyleSheet("color:#000000;background-color:#c1c1c1");
     }
 
     void updateCalendar() {
+        QTextCharFormat clearFormat;
+
+        QDate firstDay = QDate::currentDate().addDays(
+            1 - QDate::currentDate().day());
+        QDate lastDay = firstDay.addMonths(1).addDays(-1);
+
+        for (QDate d = firstDay; d <= lastDay; d = d.addDays(1)) {
+            calendar->setDateTextFormat(d, clearFormat);
+        }
+
+        //marked days
         QSqlQuery query;
         query.exec("SELECT Date FROM MedicationCalendar WHERE MedicationTaken = 1");
 
@@ -226,7 +241,6 @@ centralWidget->setStyleSheet("color:#000000;background-color:#c1c1c1");
             QDate date = QDate::fromString(query.value(0).toString(), Qt::ISODate);
             dates.append(date);
         }
-
         QTextCharFormat format;
         for (const QDate &date : dates) {
             if (isMedicationTaken(date)) {
@@ -234,6 +248,25 @@ centralWidget->setStyleSheet("color:#000000;background-color:#c1c1c1");
             }
                calendar->setDateTextFormat(date, format);
         }
+
+        // unmarked days are different color
+        QSqlQuery query2;
+        query2.exec("SELECT Date FROM MedicationCalendar WHERE MedicationTaken = 3");
+
+        QList<QDate> dates2;
+        while (query2.next()) {
+            QDate date = QDate::fromString(query2.value(0).toString(), Qt::ISODate);
+            dates2.append(date);
+        }
+
+        QTextCharFormat format2;
+        for (const QDate &date : dates2) {
+            if (isMedicationTaken(date)) {
+                format2.setBackground(Qt::blue); // Color for dates with medication taken
+            }
+               calendar->setDateTextFormat(date, format2);
+        }
+
     }
 
     void createSystemTrayIcon() {
