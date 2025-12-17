@@ -63,15 +63,17 @@ qApp->setQuitOnLastWindowClosed(false);
     }
 
     void dateClicked(const QDate &date) {
-       // if (!isMedicationTaken(date)){
-        if (1){
+
+       // if (1){
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(this, "Medication Reminder", "Would you like to take medication for this day?",
                                       QMessageBox::Yes | QMessageBox::No);
+
         if (reply == QMessageBox::Yes) {
             markMedicationTaken(date,true);
             updateCalendar();
         }
+        if (isMedicationTaken(date)){
         if (reply == QMessageBox::No) {
             markMedicationTaken(date,3);
             updateCalendar();
